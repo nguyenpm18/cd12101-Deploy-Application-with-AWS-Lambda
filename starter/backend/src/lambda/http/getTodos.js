@@ -9,29 +9,23 @@ const logger = createLogger('http/getTodos.js');
 
 export const handler = middy()
   .use(httpErrorHandler())
-  .use(cors({
-    credentials: true
-  }))
+  .use(cors({ origin: '*', credentials: true }))
   .handler(async event => {
     try {
       const userId = getUserId(event);
-
-      logger.info(`Retrieving TODO items for user: ${userId}`, { function: "handler()" });
+      logger.info(`Retrieving TODO items for user: ${userId}`, { function: 'handler()' });
 
       const todos = await getAllTodos(userId);
+      logger.info(`Retrieved ${todos.length} TODO items`, { function: 'handler()' });
 
       return {
         statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-        },
-        body: JSON.stringify({
-          items: todos
-        })
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ items: todos })
       };
     } catch (error) {
-      logger.error('Error retrieving TODO items', { error: error.message, userId });
-      throw new Error('Error retrieving TODO items');
+      logger.error(`Error retrieving TODO items: ${error.message}`, { userId });
+      return { statusCode: 500, body: JSON.stringify({ error: 'Internal Server Error' }) };
     }
   });
 
